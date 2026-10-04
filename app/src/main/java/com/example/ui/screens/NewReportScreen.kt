@@ -223,122 +223,10 @@ fun NewReportScreen(
                         )
                     }
                 },
-                actions = {
-                    Button(
-                        onClick = performSubmit,
-                        enabled = !isSubmitting,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SatpolGold,
-                            contentColor = Color(0xFF1E293B)
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .testTag("btn_top_submit_report")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Kirim",
-                            modifier = Modifier.size(15.dp),
-                            tint = Color(0xFF1E293B)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "KIRIM",
-                            fontWeight = FontWeight.Black,
-                            fontSize = 12.sp,
-                            color = Color(0xFF1E293B)
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SatpolBluePrimary
                 )
             )
-        },
-        bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
-                shadowElevation = 16.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                        .navigationBarsPadding()
-                ) {
-                    if (validationError != null) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(SatpolRedLight)
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = SatpolRedAlert,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = validationError!!,
-                                color = SatpolRedAlert,
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
-                            )
-                        }
-                    }
-
-                    Button(
-                        onClick = performSubmit,
-                        enabled = !isSubmitting,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                            .testTag("btn_submit_report_sticky"),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SatpolBluePrimary,
-                            disabledContainerColor = SatpolBluePrimary.copy(alpha = 0.5f)
-                        )
-                    ) {
-                        if (isSubmitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "Menyimpan ke Database & Cloud...",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "KIRIM LAPORAN SEKARANG",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 0.5.sp
-                                ),
-                                color = Color.White
-                            )
-                        }
-                    }
-                }
-            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -896,8 +784,8 @@ fun NewReportScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Kirim Laporan Resmi (Masuk Database)",
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            text = "Kirim Laporan Pelanggaran",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = Color.White
                         )
                     }
