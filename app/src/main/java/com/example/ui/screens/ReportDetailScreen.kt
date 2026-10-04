@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +80,7 @@ import com.example.ui.theme.SatpolRedAlert
 import com.example.ui.theme.Slate200
 import com.example.ui.theme.Slate600
 import com.example.ui.theme.Slate800
+import com.example.ui.theme.satpolTextFieldColors
 import com.example.ui.viewmodel.ReportViewModel
 import com.example.util.LocationHelper
 import java.text.SimpleDateFormat
@@ -677,12 +679,18 @@ fun ReportDetailScreen(
                     OutlinedTextField(
                         value = officerNotesInput,
                         onValueChange = { officerNotesInput = it },
-                        label = { Text("Catatan Penindakan Lapangan") },
-                        placeholder = { Text("Rincian tindakan: unit patroli yang turun, hasil teguran, sitaan barang...") },
+                        label = { Text("Catatan Penindakan Lapangan", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+                        placeholder = { Text("Rincian tindakan: unit patroli yang turun, hasil teguran, sitaan barang...", color = Color(0xFF64748B)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(110.dp),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(10.dp),
+                        colors = satpolTextFieldColors(),
+                        textStyle = TextStyle(
+                            color = Color(0xFF000000),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
                     )
                 }
             },

@@ -16,8 +16,8 @@ android {
     applicationId = "com.aistudio.satpolpp.repkzy"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 3
+    versionName = "1.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -100,6 +100,7 @@ dependencies {
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
+  implementation(libs.firebase.database)
   // Uncomment to use Firestore:
   // implementation(libs.firebase.firestore)
 

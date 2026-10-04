@@ -48,7 +48,7 @@ import com.example.ui.viewmodel.ReportViewModel
 enum class AppTab(val title: String) {
     HOME("Beranda"),
     RADAR("Radar GPS"),
-    NEW_REPORT("Lapor"),
+    NEW_REPORT("🚨 Lapor"),
     ADMIN("Admin"),
     CHATBOT("Praja Bot"),
     GUIDE("Panduan")
@@ -100,138 +100,140 @@ fun MainApp(viewModel: ReportViewModel) {
                 }
             },
             bottomBar = {
-                NavigationBar(
-                    containerColor = Color.White
-                ) {
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.HOME,
-                        onClick = { currentTab = AppTab.HOME },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "Beranda"
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = AppTab.HOME.title,
-                                fontSize = 10.sp,
-                                fontWeight = if (currentTab == AppTab.HOME) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = SatpolBluePrimary,
-                            selectedTextColor = SatpolBluePrimary,
-                            indicatorColor = Color(0xFFDBEAFE),
-                            unselectedIconColor = Slate600,
-                            unselectedTextColor = Slate600
-                        ),
-                        modifier = Modifier.testTag("nav_tab_home")
-                    )
+                if (currentTab != AppTab.NEW_REPORT) {
+                    NavigationBar(
+                        containerColor = Color.White
+                    ) {
+                        NavigationBarItem(
+                            selected = currentTab == AppTab.HOME,
+                            onClick = { currentTab = AppTab.HOME },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Home,
+                                    contentDescription = "Beranda"
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = AppTab.HOME.title,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (currentTab == AppTab.HOME) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = SatpolBluePrimary,
+                                selectedTextColor = SatpolBluePrimary,
+                                indicatorColor = Color(0xFFDBEAFE),
+                                unselectedIconColor = Slate600,
+                                unselectedTextColor = Slate600
+                            ),
+                            modifier = Modifier.testTag("nav_tab_home")
+                        )
 
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.RADAR,
-                        onClick = { currentTab = AppTab.RADAR },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Radar,
-                                contentDescription = "Radar GPS"
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = AppTab.RADAR.title,
-                                fontSize = 10.sp,
-                                fontWeight = if (currentTab == AppTab.RADAR) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = SatpolBluePrimary,
-                            selectedTextColor = SatpolBluePrimary,
-                            indicatorColor = Color(0xFFDBEAFE),
-                            unselectedIconColor = Slate600,
-                            unselectedTextColor = Slate600
-                        ),
-                        modifier = Modifier.testTag("nav_tab_radar")
-                    )
+                        NavigationBarItem(
+                            selected = currentTab == AppTab.RADAR,
+                            onClick = { currentTab = AppTab.RADAR },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Radar,
+                                    contentDescription = "Radar GPS"
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = AppTab.RADAR.title,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (currentTab == AppTab.RADAR) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = SatpolBluePrimary,
+                                selectedTextColor = SatpolBluePrimary,
+                                indicatorColor = Color(0xFFDBEAFE),
+                                unselectedIconColor = Slate600,
+                                unselectedTextColor = Slate600
+                            ),
+                            modifier = Modifier.testTag("nav_tab_radar")
+                        )
 
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.NEW_REPORT,
-                        onClick = { currentTab = AppTab.NEW_REPORT },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AddLocationAlt,
-                                contentDescription = "Lapor GPS"
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = AppTab.NEW_REPORT.title,
-                                fontSize = 10.sp,
-                                fontWeight = if (currentTab == AppTab.NEW_REPORT) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = SatpolBluePrimary,
-                            selectedTextColor = SatpolBluePrimary,
-                            indicatorColor = Color(0xFFDBEAFE),
-                            unselectedIconColor = Slate600,
-                            unselectedTextColor = Slate600
-                        ),
-                        modifier = Modifier.testTag("nav_tab_new_report")
-                    )
+                        NavigationBarItem(
+                            selected = currentTab == AppTab.NEW_REPORT,
+                            onClick = { currentTab = AppTab.NEW_REPORT },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.AddLocationAlt,
+                                    contentDescription = "Lapor GPS"
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = AppTab.NEW_REPORT.title,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (currentTab == AppTab.NEW_REPORT) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = SatpolBluePrimary,
+                                selectedTextColor = SatpolBluePrimary,
+                                indicatorColor = Color(0xFFDBEAFE),
+                                unselectedIconColor = Slate600,
+                                unselectedTextColor = Slate600
+                            ),
+                            modifier = Modifier.testTag("nav_tab_new_report")
+                        )
 
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.ADMIN,
-                        onClick = { currentTab = AppTab.ADMIN },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AdminPanelSettings,
-                                contentDescription = "Admin"
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = AppTab.ADMIN.title,
-                                fontSize = 10.sp,
-                                fontWeight = if (currentTab == AppTab.ADMIN) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = SatpolBluePrimary,
-                            selectedTextColor = SatpolBluePrimary,
-                            indicatorColor = Color(0xFFDBEAFE),
-                            unselectedIconColor = Slate600,
-                            unselectedTextColor = Slate600
-                        ),
-                        modifier = Modifier.testTag("nav_tab_admin")
-                    )
+                        NavigationBarItem(
+                            selected = currentTab == AppTab.ADMIN,
+                            onClick = { currentTab = AppTab.ADMIN },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.AdminPanelSettings,
+                                    contentDescription = "Admin"
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = AppTab.ADMIN.title,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (currentTab == AppTab.ADMIN) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = SatpolBluePrimary,
+                                selectedTextColor = SatpolBluePrimary,
+                                indicatorColor = Color(0xFFDBEAFE),
+                                unselectedIconColor = Slate600,
+                                unselectedTextColor = Slate600
+                            ),
+                            modifier = Modifier.testTag("nav_tab_admin")
+                        )
 
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.CHATBOT,
-                        onClick = { currentTab = AppTab.CHATBOT },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = "Praja Bot AI"
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = AppTab.CHATBOT.title,
-                                fontSize = 10.sp,
-                                fontWeight = if (currentTab == AppTab.CHATBOT) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = SatpolBluePrimary,
-                            selectedTextColor = SatpolBluePrimary,
-                            indicatorColor = Color(0xFFDBEAFE),
-                            unselectedIconColor = Slate600,
-                            unselectedTextColor = Slate600
-                        ),
-                        modifier = Modifier.testTag("nav_tab_chatbot")
-                    )
+                        NavigationBarItem(
+                            selected = currentTab == AppTab.CHATBOT,
+                            onClick = { currentTab = AppTab.CHATBOT },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "Praja Bot AI"
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = AppTab.CHATBOT.title,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (currentTab == AppTab.CHATBOT) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = SatpolBluePrimary,
+                                selectedTextColor = SatpolBluePrimary,
+                                indicatorColor = Color(0xFFDBEAFE),
+                                unselectedIconColor = Slate600,
+                                unselectedTextColor = Slate600
+                            ),
+                            modifier = Modifier.testTag("nav_tab_chatbot")
+                        )
+                    }
                 }
             }
         ) { innerPadding ->
@@ -258,7 +260,8 @@ fun MainApp(viewModel: ReportViewModel) {
                 AppTab.NEW_REPORT -> {
                     NewReportScreen(
                         viewModel = viewModel,
-                        onNavigateBack = { currentTab = AppTab.HOME }
+                        onNavigateBack = { currentTab = AppTab.HOME },
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
                 AppTab.ADMIN -> {

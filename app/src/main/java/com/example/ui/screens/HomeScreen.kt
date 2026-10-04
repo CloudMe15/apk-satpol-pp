@@ -20,13 +20,25 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddAlert
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.ui.text.TextStyle
+import com.example.data.auth.AuthManager
+import com.example.ui.theme.satpolTextFieldColors
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Search
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.material3.Surface
+import androidx.compose.material3.AlertDialog
+import com.example.data.remote.RealtimeCloudSyncService
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -91,6 +103,19 @@ fun HomeScreen(
     val selectedStatus by viewModel.statusFilter.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.categoryFilter.collectAsStateWithLifecycle()
 
+    val isOfficerLoggedIn by AuthManager.isOfficerLoggedIn.collectAsStateWithLifecycle()
+    val isOfficerOnline by AuthManager.isOfficerOnline.collectAsStateWithLifecycle()
+    val activeOfficer by AuthManager.activeOfficer.collectAsStateWithLifecycle()
+    val cloudOfficerOnline by AuthManager.cloudOfficerOnline.collectAsStateWithLifecycle()
+    val cloudOfficerName by AuthManager.cloudOfficerName.collectAsStateWithLifecycle()
+    val cloudOfficerSquad by AuthManager.cloudOfficerSquad.collectAsStateWithLifecycle()
+    val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
+    val appUpdateInfo by RealtimeCloudSyncService.appUpdateInfo.collectAsStateWithLifecycle()
+
+    val isOnlineNow = if (isOfficerLoggedIn) isOfficerOnline else cloudOfficerOnline
+    val currentOfficerName = if (isOfficerLoggedIn) (activeOfficer?.fullName ?: "Personil Satpol PP") else (cloudOfficerName ?: "Bripka Danu Prasetyo")
+    val currentOfficerSquad = if (isOfficerLoggedIn) (activeOfficer?.squadName ?: "Regu Reaksi Cepat") else (cloudOfficerSquad ?: "Unit Patroli Reaksi Cepat (UPRC)")
+
     val pendingCount = allReports.count { it.status == ViolationReport.STATUS_PENDING }
     val inProgressCount = allReports.count { it.status == ViolationReport.STATUS_IN_PROGRESS }
     val resolvedCount = allReports.count { it.status == ViolationReport.STATUS_RESOLVED }
@@ -104,8 +129,179 @@ fun HomeScreen(
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 90.dp)
+            contentPadding = PaddingValues(bottom = 120.dp)
         ) {
+            // HERO BANNER: Tombol Lapor Utama yang Sangat Jelas & Mudah Ditemukan
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = SatpolBluePrimary),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Campaign,
+                                contentDescription = null,
+                                tint = SatpolGold,
+                                modifier = Modifier.size(26.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "LAYANAN PENGADUAN TRANTIBUM",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp
+                                ),
+                                color = SatpolGoldLight
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = "Ada Gangguan Ketertiban di Sekitar Anda?",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Laporkan PKL liar, ternak berkeliaran, parkir sembarangan, reklame ilegal, miras, atau pelanggaran Perda.",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                            color = Color(0xFFE2E8F0)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Button(
+                            onClick = onNavigateToNewReport,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .testTag("btn_hero_buat_laporan"),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SatpolRedAlert),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AddAlert,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "🚨 KLIK DI SINI: BUAT LAPORAN BARU",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 13.sp,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Status Petugas Piket: Online vs Offline (Langsung Terlihat oleh Warga & Terhubung Cloud)
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isOnlineNow) Color(0xFFDCFCE7) else Color(0xFFFEF3C7)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isOnlineNow) Color(0xFF16A34A) else Color(0xFFD97706)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(CircleShape)
+                                .background(if (isOnlineNow) SatpolGreen else Color(0xFFD97706))
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isOnlineNow) {
+                                    "🟢 PETUGAS PATROLI SEDANG ONLINE & SIAGA"
+                                } else {
+                                    "🟡 STATUS: PETUGAS SEDANG LEPAS PIKET / OFFLINE"
+                                },
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = if (isOnlineNow) Color(0xFF166534) else Color(0xFF92400E)
+                            )
+                            Text(
+                                text = if (isOnlineNow) {
+                                    "Petugas Aktif: $currentOfficerName ($currentOfficerSquad) • Siaga menerima laporan"
+                                } else {
+                                    "Belum ada petugas piket yang online. Laporan warga tetap dapat dikirimkan & akan diproses saat dinas piket berikutnya."
+                                },
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = if (isOnlineNow) Color(0xFF15803D) else Color(0xFFB45309)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Real-Time Multi-HP Cloud Sync Bar
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(if (isSyncing) SatpolGold else SatpolGreen)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isSyncing) "Menyinkronkan Cloud Real-Time..." else "Cloud Real-Time Aktif (Multi-HP)",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                            color = Slate600
+                        )
+                    }
+
+                    TextButton(
+                        onClick = { viewModel.manualSync() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Sync,
+                            contentDescription = "Sync Cloud",
+                            modifier = Modifier.size(14.dp),
+                            tint = SatpolBluePrimary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Sync Sekarang",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SatpolBluePrimary
+                        )
+                    }
+                }
+            }
             // Active Dispatch Live Tracking Alert (Ojek Online style order in-progress banner)
             if (activeDispatchedReport != null) {
                 item {
@@ -335,11 +531,11 @@ fun HomeScreen(
                     },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White,
-                        focusedBorderColor = SatpolBluePrimary,
-                        unfocusedBorderColor = Slate200
+                    colors = satpolTextFieldColors(),
+                    textStyle = TextStyle(
+                        color = Color(0xFF0F172A),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
                     )
                 )
             }
@@ -431,15 +627,15 @@ fun HomeScreen(
             }
         }
 
-        // Floating Action Button
+        // Floating Action Button - Selalu melayang jelas di atas bilah navigasi
         FloatingActionButton(
             onClick = onNavigateToNewReport,
-            containerColor = SatpolBluePrimary,
+            containerColor = SatpolRedAlert,
             contentColor = Color.White,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(20.dp)
+                .padding(bottom = 90.dp, end = 16.dp)
                 .testTag("fab_new_report")
         ) {
             Row(
@@ -447,17 +643,120 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = Icons.Default.Campaign,
                     contentDescription = "Lapor Pelanggaran",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.White
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Lapor GPS",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    text = "🚨 BUAT LAPORAN",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 13.sp,
+                    color = Color.White
                 )
             }
+        }
+
+        // In-App Update Notification Dialog (Mendukung Catatan Rilis & Wajib/Opsional)
+        if (appUpdateInfo != null && appUpdateInfo!!.hasUpdate) {
+            val update = appUpdateInfo!!
+            AlertDialog(
+                onDismissRequest = {
+                    if (!update.forceUpdate) {
+                        RealtimeCloudSyncService.dismissUpdate()
+                    }
+                },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Campaign,
+                            contentDescription = null,
+                            tint = SatpolBluePrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (update.forceUpdate)
+                                "Pembaruan Wajib (${update.latestVersionName})"
+                            else
+                                "Pembaruan Tersedia (${update.latestVersionName})",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Slate800
+                        )
+                    }
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = if (update.forceUpdate)
+                                "Versi aplikasi Anda sudah usang. Mohon perbarui ke versi terbaru untuk tetap dapat menggunakan aplikasi Satpol PP Siaga."
+                            else
+                                "Tersedia pembaruan versi baru untuk aplikasi Satpol PP Siaga.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Slate600
+                        )
+
+                        // Kotak Catatan Pembaruan (Release Notes)
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF1F5F9),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = "📋 Catatan Pembaruan:",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = SatpolBluePrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = update.updateNotes.ifBlank { "Peningkatan performa dan sinkronisasi real-time." },
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                    color = Slate800
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "Aplikasi akan otomatis mengunduh APK terbaru dan memandu instalasi.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            try {
+                                com.example.util.ApkDownloadInstallManager.startDownloadAndInstall(
+                                    context = context,
+                                    downloadUrl = update.downloadUrl,
+                                    versionName = update.latestVersionName
+                                )
+                            } catch (_: Exception) {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(update.downloadUrl))
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                context.startActivity(intent)
+                            }
+                            if (!update.forceUpdate) {
+                                RealtimeCloudSyncService.dismissUpdate()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = SatpolBluePrimary),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Update Sekarang", fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    if (!update.forceUpdate) {
+                        TextButton(onClick = { RealtimeCloudSyncService.dismissUpdate() }) {
+                            Text("Nanti Saja")
+                        }
+                    }
+                }
+            )
         }
     }
 }

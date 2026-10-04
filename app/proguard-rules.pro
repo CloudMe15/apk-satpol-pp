@@ -1,21 +1,38 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# ==============================================================================
+# PROGUARD / R8 SECURITY HARDENING - SATPOL PP SIAGA
+# Melindungi kode dari dekompilasi (JADX, APKTool, Bytecode Viewer)
+# ==============================================================================
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# 1. Hapus semua log debug sensitif pada rilis produksi agar tidak bocor di logcat
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int d(...);
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# 2. Samarkan nama berkas sumber & nomor baris
+-renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# 3. Obfuskasi agresif nama kelas dan paket
+-repackageclasses 'com.aistudio.satpolpp.repkzy.core'
+-allowaccessmodification
+
+# 4. Pertahankan model data Room Database & JSON Serialization agar tidak rusak
+-keepclassmembers class * extends androidx.room.RoomDatabase {
+    <init>();
+}
+-keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao class * { *; }
+
+# Moshi / Reflection Protection
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-keepclassmembers class * {
+    @com.squareup.moshi.Json <fields>;
+    @com.squareup.moshi.JsonQualifier <fields>;
+}
+
+# 5. Keamanan Model Laporan & Auth Satpol PP
+-keepclassmembers class com.example.data.model.** { *; }
+-keepclassmembers class com.example.data.auth.** { *; }
+

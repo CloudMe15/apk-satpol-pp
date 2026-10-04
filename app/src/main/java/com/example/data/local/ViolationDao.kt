@@ -16,6 +16,9 @@ interface ViolationDao {
     @Query("SELECT * FROM violation_reports WHERE id = :id")
     fun getReportById(id: Long): Flow<ViolationReport?>
 
+    @Query("SELECT * FROM violation_reports WHERE id = :id LIMIT 1")
+    suspend fun getReportByIdDirect(id: Long): ViolationReport?
+
     @Query("SELECT * FROM violation_reports WHERE status = :status ORDER BY timestamp DESC")
     fun getReportsByStatus(status: String): Flow<List<ViolationReport>>
 
@@ -49,6 +52,12 @@ interface ViolationDao {
 
     @Query("DELETE FROM violation_reports WHERE id = :id")
     suspend fun deleteReport(id: Long)
+
+    @Query("SELECT * FROM violation_reports WHERE ticketNumber = :ticketNumber LIMIT 1")
+    suspend fun getReportByTicket(ticketNumber: String): ViolationReport?
+
+    @Query("SELECT * FROM violation_reports ORDER BY timestamp DESC")
+    suspend fun getAllReportsDirect(): List<ViolationReport>
 
     @Query("SELECT COUNT(*) FROM violation_reports")
     suspend fun getReportCount(): Int

@@ -57,7 +57,7 @@ object AuthManager {
         OfficerAccount(
             username = "AgusSatpol",
             password = "CloudMe2026",
-            fullName = "Serma Agus Kurniawan",
+            fullName = " Agus Kurniawan",
             rank = "Komandan Regu 2",
             nip = "198804152010121003",
             squadName = "Regu Penegakan Perda 2 (Tibum)",
@@ -67,7 +67,7 @@ object AuthManager {
         OfficerAccount(
             username = "HendraSatpol",
             password = "CloudMe2026",
-            fullName = "Brigadir Hendra Saputra",
+            fullName = " Hendra Saputra",
             rank = "Anggota Patroli Lapangan",
             nip = "199203112015031008",
             squadName = "Tim Patroli Wilayah Kota Rengat",
@@ -110,8 +110,28 @@ object AuthManager {
     val officerName: StateFlow<String?> = _officerName.asStateFlow()
 
     // Officer Online/Offline Status (Like Gojek/Grab driver online toggle)
-    private val _isOfficerOnline = MutableStateFlow(true)
+    private val _isOfficerOnline = MutableStateFlow(false)
     val isOfficerOnline: StateFlow<Boolean> = _isOfficerOnline.asStateFlow()
+
+    // Shared Cloud Officer Online State (from remote devices)
+    private val _cloudOfficerOnline = MutableStateFlow(true)
+    val cloudOfficerOnline: StateFlow<Boolean> = _cloudOfficerOnline.asStateFlow()
+
+    private val _cloudOfficerName = MutableStateFlow<String?>("Bripka Danu Prasetyo")
+    val cloudOfficerName: StateFlow<String?> = _cloudOfficerName.asStateFlow()
+
+    private val _cloudOfficerSquad = MutableStateFlow<String?>("Unit Patroli Reaksi Cepat (UPRC)")
+    val cloudOfficerSquad: StateFlow<String?> = _cloudOfficerSquad.asStateFlow()
+
+    private val _cloudOfficerVehicle = MutableStateFlow<String?>("Mobil Patroli Dalmas (BM 1002 IN)")
+    val cloudOfficerVehicle: StateFlow<String?> = _cloudOfficerVehicle.asStateFlow()
+
+    fun updateCloudOfficerStatus(isOnline: Boolean, officerName: String, squadName: String, vehicleName: String) {
+        _cloudOfficerOnline.value = isOnline
+        if (officerName.isNotBlank()) _cloudOfficerName.value = officerName
+        if (squadName.isNotBlank()) _cloudOfficerSquad.value = squadName
+        if (vehicleName.isNotBlank()) _cloudOfficerVehicle.value = vehicleName
+    }
 
     // Status Notification Banner
     private val _statusNotification = MutableStateFlow<StatusNotification?>(null)
@@ -197,6 +217,7 @@ object AuthManager {
         _isOfficerLoggedIn.value = false
         _activeOfficer.value = null
         _officerUser.value = null
+        _isOfficerOnline.value = false
         _currentUser.value = defaultCitizen
         _statusNotification.value = null
     }

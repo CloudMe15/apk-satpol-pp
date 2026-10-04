@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,6 +62,7 @@ import com.example.R
 import com.example.data.remote.ChatMessage
 import com.example.data.remote.GeminiChatService
 import com.example.data.remote.MessageSender
+import com.example.ui.theme.satpolTextFieldColors
 import com.example.ui.theme.SatpolBlueDark
 import com.example.ui.theme.SatpolBluePrimary
 import com.example.ui.theme.SatpolGold
@@ -289,11 +291,11 @@ fun GeminiChatScreen(
                     .testTag("input_gemini_chat"),
                 shape = RoundedCornerShape(24.dp),
                 maxLines = 4,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SatpolBluePrimary,
-                    unfocusedBorderColor = Slate200,
-                    focusedContainerColor = Color(0xFFF8FAFC),
-                    unfocusedContainerColor = Color(0xFFF8FAFC)
+                colors = satpolTextFieldColors(),
+                textStyle = TextStyle(
+                    color = Color(0xFF0F172A),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
                 )
             )
 

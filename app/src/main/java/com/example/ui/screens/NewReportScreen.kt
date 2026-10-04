@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -63,6 +64,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -87,10 +89,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.text.TextStyle
 import coil.compose.AsyncImage
 import com.example.data.model.ViolationReport
 import com.example.ui.components.GpsLiveCard
 import com.example.ui.components.MiniMapVisual
+import com.example.ui.theme.satpolTextFieldColors
 import com.example.ui.theme.SatpolBlueDark
 import com.example.ui.theme.SatpolBluePrimary
 import com.example.ui.theme.SatpolGold
@@ -180,6 +184,23 @@ fun NewReportScreen(
         }
     }
 
+    val performSubmit: () -> Unit = {
+        val (canSubmit, spamError) = com.example.util.AppSecurityGuard.canSubmitReport()
+        if (!canSubmit) {
+            validationError = spamError
+        } else if (formTitle.isBlank()) {
+            validationError = "Mohon lengkapi Bagian 3: Judul Singkat Kejadian belum diisi."
+        } else if (formDescription.isBlank()) {
+            validationError = "Mohon lengkapi Bagian 3: Rincian Kronologi & Kejadian belum diisi."
+        } else {
+            validationError = null
+            viewModel.submitReport(context) { ticket ->
+                successTicketNumber = ticket
+                showSuccessDialog = true
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -202,10 +223,122 @@ fun NewReportScreen(
                         )
                     }
                 },
+                actions = {
+                    Button(
+                        onClick = performSubmit,
+                        enabled = !isSubmitting,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SatpolGold,
+                            contentColor = Color(0xFF1E293B)
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .testTag("btn_top_submit_report")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Kirim",
+                            modifier = Modifier.size(15.dp),
+                            tint = Color(0xFF1E293B)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "KIRIM",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 12.sp,
+                            color = Color(0xFF1E293B)
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SatpolBluePrimary
                 )
             )
+        },
+        bottomBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White,
+                shadowElevation = 16.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .navigationBarsPadding()
+                ) {
+                    if (validationError != null) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(SatpolRedLight)
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = SatpolRedAlert,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = validationError!!,
+                                color = SatpolRedAlert,
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = performSubmit,
+                        enabled = !isSubmitting,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .testTag("btn_submit_report_sticky"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SatpolBluePrimary,
+                            disabledContainerColor = SatpolBluePrimary.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        if (isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Menyimpan ke Database & Cloud...",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "KIRIM LAPORAN SEKARANG",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.5.sp
+                                ),
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -260,15 +393,17 @@ fun NewReportScreen(
                         OutlinedTextField(
                             value = formAddress,
                             onValueChange = { viewModel.formManualAddress.value = it },
-                            label = { Text("Alamat Lengkap / Jalan") },
-                            placeholder = { Text("Nama jalan, kelurahan, kecamatan...") },
+                            label = { Text("Alamat Lengkap / Jalan *", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+                            placeholder = { Text("Nama jalan, kelurahan, kecamatan...", color = Color(0xFF64748B)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_report_address"),
                             shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SatpolBluePrimary,
-                                unfocusedBorderColor = Slate200
+                            colors = satpolTextFieldColors(),
+                            textStyle = TextStyle(
+                                color = Color(0xFF000000),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
                             )
                         )
 
@@ -277,15 +412,17 @@ fun NewReportScreen(
                         OutlinedTextField(
                             value = formLandmark,
                             onValueChange = { viewModel.formLandmark.value = it },
-                            label = { Text("Patokan / Landmark Terdekat (Opsional)") },
-                            placeholder = { Text("Contoh: Samping Toko Roti, Seberang SPBU") },
+                            label = { Text("Patokan / Landmark Terdekat (Opsional)", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+                            placeholder = { Text("Contoh: Samping Toko Roti, Seberang SPBU", color = Color(0xFF64748B)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_report_landmark"),
                             shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SatpolBluePrimary,
-                                unfocusedBorderColor = Slate200
+                            colors = satpolTextFieldColors(),
+                            textStyle = TextStyle(
+                                color = Color(0xFF000000),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
                             )
                         )
 
@@ -459,15 +596,17 @@ fun NewReportScreen(
                         OutlinedTextField(
                             value = formTitle,
                             onValueChange = { viewModel.formTitle.value = it },
-                            label = { Text("Judul Singkat Kejadian *") },
-                            placeholder = { Text("Contoh: PKL Menutup Badan Jalan dan Trotoar") },
+                            label = { Text("Judul Singkat Kejadian *", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+                            placeholder = { Text("Contoh: PKL Menutup Badan Jalan dan Trotoar", color = Color(0xFF64748B)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_report_title"),
                             shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SatpolBluePrimary,
-                                unfocusedBorderColor = Slate200
+                            colors = satpolTextFieldColors(),
+                            textStyle = TextStyle(
+                                color = Color(0xFF000000),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
                             )
                         )
 
@@ -476,17 +615,19 @@ fun NewReportScreen(
                         OutlinedTextField(
                             value = formDescription,
                             onValueChange = { viewModel.formDescription.value = it },
-                            label = { Text("Rincian Kronologi & Kejadian *") },
-                            placeholder = { Text("Jelaskan situasi yang terjadi, perkiraan jumlah pelanggar, dampak terhadap ketertiban umum...") },
+                            label = { Text("Rincian Kronologi & Kejadian *", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+                            placeholder = { Text("Jelaskan situasi yang terjadi, perkiraan jumlah pelanggar, dampak terhadap ketertiban umum...", color = Color(0xFF64748B)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(120.dp)
                                 .testTag("input_report_description"),
                             shape = RoundedCornerShape(12.dp),
                             maxLines = 5,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SatpolBluePrimary,
-                                unfocusedBorderColor = Slate200
+                            colors = satpolTextFieldColors(),
+                            textStyle = TextStyle(
+                                color = Color(0xFF000000),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
                             )
                         )
 
@@ -652,22 +793,24 @@ fun NewReportScreen(
                             OutlinedTextField(
                                 value = formReporterName,
                                 onValueChange = { viewModel.formReporterName.value = it },
-                                label = { Text("Nama Lengkap Pelapor") },
-                                placeholder = { Text("Masukkan nama Anda...") },
+                                label = { Text("Nama Lengkap Pelapor", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+                                placeholder = { Text("Masukkan nama Anda...", color = Color(0xFF64748B)) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Default.Person,
                                         contentDescription = null,
-                                        tint = Slate600
+                                        tint = SatpolBluePrimary
                                     )
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("input_reporter_name"),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = SatpolBluePrimary,
-                                    unfocusedBorderColor = Slate200
+                                colors = satpolTextFieldColors(),
+                                textStyle = TextStyle(
+                                    color = Color(0xFF000000),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
                                 )
                             )
 
@@ -676,15 +819,17 @@ fun NewReportScreen(
                             OutlinedTextField(
                                 value = formReporterPhone,
                                 onValueChange = { viewModel.formReporterPhone.value = it },
-                                label = { Text("Nomor HP / WhatsApp") },
-                                placeholder = { Text("0812xxxxxxxx") },
+                                label = { Text("Nomor HP / WhatsApp", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold) },
+                                placeholder = { Text("0812xxxxxxxx", color = Color(0xFF64748B)) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("input_reporter_phone"),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = SatpolBluePrimary,
-                                    unfocusedBorderColor = Slate200
+                                colors = satpolTextFieldColors(),
+                                textStyle = TextStyle(
+                                    color = Color(0xFF000000),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
                                 )
                             )
                         }
@@ -722,21 +867,7 @@ fun NewReportScreen(
             // Submit Button
             item {
                 Button(
-                    onClick = {
-                        if (formTitle.isBlank()) {
-                            validationError = "Mohon isi judul singkat kejadian pelanggaran."
-                            return@Button
-                        }
-                        if (formDescription.isBlank()) {
-                            validationError = "Mohon isi rincian kejadian pelanggaran."
-                            return@Button
-                        }
-                        validationError = null
-                        viewModel.submitReport(context) { ticket ->
-                            successTicketNumber = ticket
-                            showSuccessDialog = true
-                        }
-                    },
+                    onClick = performSubmit,
                     enabled = !isSubmitting,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -755,7 +886,7 @@ fun NewReportScreen(
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Mengirim Laporan Terverifikasi GPS...", color = Color.White)
+                        Text("Mengirim Laporan ke Database & Admin...", color = Color.White)
                     } else {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
@@ -765,12 +896,16 @@ fun NewReportScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Kirim Laporan Resmi (GPS)",
+                            text = "Kirim Laporan Resmi (Masuk Database)",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = Color.White
                         )
                     }
                 }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }

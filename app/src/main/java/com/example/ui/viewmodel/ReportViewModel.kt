@@ -53,6 +53,21 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
     private val _isSubmitting = MutableStateFlow(false)
     val isSubmitting: StateFlow<Boolean> = _isSubmitting.asStateFlow()
 
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+
+    fun manualSync() {
+        viewModelScope.launch {
+            _isSyncing.value = true
+            try {
+                repository.syncWithCloud()
+            } catch (_: Exception) {}
+            finally {
+                _isSyncing.value = false
+            }
+        }
+    }
+
     // Selected Report for Detail View
     private val _selectedReportId = MutableStateFlow<Long?>(null)
     val selectedReportId: StateFlow<Long?> = _selectedReportId.asStateFlow()
@@ -61,11 +76,23 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         val db = AppDatabase.getInstance(application)
         repository = ViolationRepository(db.violationDao())
 
-        // Ensure database has initial sample reports so the app always displays live data
+        // Start Firebase Realtime Database instantaneous listener for multi-HP sync
+        repository.startFirebaseRealtimeListener(viewModelScope)
+
+        // Initial seed, instant cloud sync, and real-time multi-device polling loop
         viewModelScope.launch {
             try {
                 repository.seedSampleReportsIfEmpty()
+                repository.syncWithCloud()
             } catch (_: Exception) {}
+
+            // Real-time multi-device sync every 6 seconds
+            while (true) {
+                kotlinx.coroutines.delay(6000)
+                try {
+                    repository.syncWithCloud()
+                } catch (_: Exception) {}
+            }
         }
     }
 
@@ -154,20 +181,26 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
                 val gps = _currentGps.value ?: LocationHelper.getCurrentLocation(context)
                 val ticketNum = repository.generateTicketNumber()
 
+                val safeTitle = com.example.util.AppSecurityGuard.sanitizeInput(formTitle.value)
+                val safeDescription = com.example.util.AppSecurityGuard.sanitizeInput(formDescription.value)
+                val safeReporter = com.example.util.AppSecurityGuard.sanitizeInput(formReporterName.value)
+                val safeAddress = com.example.util.AppSecurityGuard.sanitizeInput(formManualAddress.value)
+                val safeLandmark = com.example.util.AppSecurityGuard.sanitizeInput(formLandmark.value)
+
                 val newReport = ViolationReport(
                     ticketNumber = ticketNum,
                     category = formCategory.value,
-                    title = formTitle.value.trim(),
-                    description = formDescription.value.trim(),
+                    title = safeTitle,
+                    description = safeDescription,
                     urgency = formUrgency.value,
-                    reporterName = if (formIsAnonymous.value) "Anonim" else formReporterName.value.trim().ifBlank { "Masyarakat" },
+                    reporterName = if (formIsAnonymous.value) "Anonim" else safeReporter.ifBlank { "Masyarakat" },
                     reporterPhone = if (formIsAnonymous.value) "" else formReporterPhone.value.trim(),
                     isAnonymous = formIsAnonymous.value,
                     latitude = gps.latitude,
                     longitude = gps.longitude,
                     accuracyMeters = gps.accuracyMeters,
-                    address = formManualAddress.value.trim().ifBlank { gps.address },
-                    landmark = formLandmark.value.trim(),
+                    address = safeAddress.ifBlank { gps.address },
+                    landmark = safeLandmark,
                     photoUri = formPhotoUri.value,
                     status = ViolationReport.STATUS_PENDING,
                     officerNotes = null,

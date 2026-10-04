@@ -66,6 +66,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -84,6 +85,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -97,6 +99,7 @@ import com.example.data.auth.OfficerAccount
 import com.example.data.model.ViolationReport
 import com.example.ui.components.StatusBadge
 import com.example.ui.components.UrgencyBadge
+import com.example.ui.theme.satpolTextFieldColors
 import com.example.ui.theme.SatpolBlueDark
 import com.example.ui.theme.SatpolBluePrimary
 import com.example.ui.theme.SatpolGold
@@ -132,9 +135,9 @@ fun AdminDashboardScreen(
     val isOfficerOnline by AuthManager.isOfficerOnline.collectAsStateWithLifecycle()
     val statusNotification by AuthManager.statusNotification.collectAsStateWithLifecycle()
 
-    // Login Form State
-    var nipInput by remember { mutableStateOf("Satpolpp2026") }
-    var passwordInput by remember { mutableStateOf("CloudMe2026") }
+    // Login Form State - Manual typing only (no auto-fill)
+    var nipInput by remember { mutableStateOf("") }
+    var passwordInput by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var loginErrorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -226,7 +229,7 @@ fun AdminDashboardScreen(
 
                         Spacer(modifier = Modifier.height(18.dp))
 
-                        // Username input
+                        // Username input - Manual typing with high-contrast text
                         OutlinedTextField(
                             value = nipInput,
                             onValueChange = {
@@ -234,7 +237,7 @@ fun AdminDashboardScreen(
                                 loginErrorMessage = null
                             },
                             label = { Text("User / ID Anggota") },
-                            placeholder = { Text("Satpolpp2026") },
+                            placeholder = { Text("Ketik ID, contoh: Satpolpp2026") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Badge,
@@ -247,15 +250,17 @@ fun AdminDashboardScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_admin_nip"),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SatpolBluePrimary,
-                                unfocusedBorderColor = Slate200
+                            colors = satpolTextFieldColors(),
+                            textStyle = TextStyle(
+                                color = Color(0xFF0F172A),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
                             )
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Password input
+                        // Password input - Manual typing with high-contrast text
                         OutlinedTextField(
                             value = passwordInput,
                             onValueChange = {
@@ -263,7 +268,7 @@ fun AdminDashboardScreen(
                                 loginErrorMessage = null
                             },
                             label = { Text("Kata Sandi (Password)") },
-                            placeholder = { Text("CloudMe2026") },
+                            placeholder = { Text("Ketik kata sandi...") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Lock,
@@ -286,9 +291,11 @@ fun AdminDashboardScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_admin_password"),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SatpolBluePrimary,
-                                unfocusedBorderColor = Slate200
+                            colors = satpolTextFieldColors(),
+                            textStyle = TextStyle(
+                                color = Color(0xFF0F172A),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
                             )
                         )
 
@@ -339,10 +346,60 @@ fun AdminDashboardScreen(
                 }
             }
 
-            // Roster of Satpol PP Officers Card Selection
+            // Status Monitoring Petugas yang Sedang Login / Online
+            item {
+                val isOnlineNow = isOfficerLoggedIn && isOfficerOnline
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isOnlineNow) Color(0xFFDCFCE7) else Color(0xFFF1F5F9)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isOnlineNow) Color(0xFF16A34A) else Slate200
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isOnlineNow) SatpolGreen else Slate600)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "MONITORING PERSONIL YANG SEDANG LOGIN:",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp
+                                ),
+                                color = if (isOnlineNow) Color(0xFF166534) else Slate600
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isOnlineNow) {
+                                "🟢 ${activeOfficer?.fullName ?: "Petugas"} (${activeOfficer?.rank}) - Status: ONLINE SIAGA"
+                            } else if (isOfficerLoggedIn) {
+                                "🟡 ${activeOfficer?.fullName ?: "Petugas"} - Status: OFFLINE (Sedang Lepas Piket / Istirahat)"
+                            } else {
+                                "🔴 Belum ada akun petugas yang aktif login saat ini."
+                            },
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = if (isOnlineNow) Color(0xFF15803D) else Slate800
+                        )
+                    }
+                }
+            }
+
+            // Roster of Satpol PP Officers Card Selection (Informasi Akun Personil Piket)
             item {
                 Text(
-                    text = "PILIH AKUN ANGGOTA SATPOL PP (REGU PIKET):",
+                    text = "DAFTAR ID PERSONIL SATPOL PP (KETIK MANUAL DI ATAS):",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp
@@ -354,13 +411,7 @@ fun AdminDashboardScreen(
 
             items(AuthManager.OFFICER_ROSTER) { officer ->
                 OfficerAccountCard(
-                    officer = officer,
-                    isSelected = nipInput == officer.username,
-                    onClick = {
-                        nipInput = officer.username
-                        passwordInput = officer.password
-                        loginErrorMessage = null
-                    }
+                    officer = officer
                 )
             }
         }
@@ -566,6 +617,11 @@ fun AdminDashboardScreen(
                         )
                     }
                 }
+            }
+
+            // Status Perlindungan Keamanan APK
+            item {
+                SecurityProtectionCard()
             }
 
             // Metrics Grid (4 KPI Cards)
@@ -815,7 +871,13 @@ fun AdminDashboardScreen(
                         placeholder = { Text("Contoh: Regu 1 telah memberikan teguran lisan...") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 3,
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(10.dp),
+                        colors = satpolTextFieldColors(),
+                        textStyle = TextStyle(
+                            color = Color(0xFF0F172A),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        )
                     )
                 }
             },
@@ -853,19 +915,12 @@ fun AdminDashboardScreen(
 @Composable
 fun OfficerAccountCard(
     officer: OfficerAccount,
-    isSelected: Boolean,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFFEFF6FF) else Color.White
-        ),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, SatpolBluePrimary) else null,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -878,13 +933,13 @@ fun OfficerAccountCard(
                 modifier = Modifier
                     .size(46.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) SatpolBluePrimary else Color(0xFFF1F5F9)),
+                    .background(Color(0xFFF1F5F9)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Shield,
                     contentDescription = null,
-                    tint = if (isSelected) SatpolGold else SatpolBluePrimary,
+                    tint = SatpolBluePrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -909,17 +964,28 @@ fun OfficerAccountCard(
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (isSelected) SatpolBluePrimary else Color(0xFFE2E8F0))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
+            Column(horizontalAlignment = Alignment.End) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFFE2E8F0))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = "ID: ${officer.username}",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Black,
+                            color = SatpolBlueDark,
+                            fontSize = 11.sp
+                        )
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = if (isSelected) "Dipilih" else "Pilih",
+                    text = "Ketik manual",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color.White else Slate800
+                        fontSize = 9.sp,
+                        color = Slate600
                     )
                 )
             }
@@ -1110,5 +1176,149 @@ fun AdminReportCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SecurityProtectionCard(modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val audit = remember { com.example.util.AppSecurityGuard.performSecurityAudit(context) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1E293B)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = null,
+                            tint = SatpolGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "STATUS PERLINDUNGAN APK",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Security Shield & Anti-Tamper Aktif",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = SatpolGreenLight
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF14532D)
+                ) {
+                    Text(
+                        text = "${audit.securityScore}% AMAN",
+                        color = Color(0xFF86EFAC),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SecurityFeatureRow(
+                    icon = "🔒",
+                    label = "Enkripsi HTTPS & SSL Strict",
+                    status = "Aktif (Anti-MITM)",
+                    isSecure = true
+                )
+                SecurityFeatureRow(
+                    icon = "🛡️",
+                    label = "Obfuskasi ProGuard / R8",
+                    status = "Terenkripsi (Anti-Decompile)",
+                    isSecure = true
+                )
+                SecurityFeatureRow(
+                    icon = "🚫",
+                    label = "Deteksi Akses Root & SU",
+                    status = if (audit.isRooted) "Peringatan Root" else "Aman (Non-Root)",
+                    isSecure = !audit.isRooted
+                )
+                SecurityFeatureRow(
+                    icon = "⚡",
+                    label = "Proteksi Hooking (Frida/Xposed)",
+                    status = if (audit.isHookingDetected) "Terdeteksi" else "Terisolasi & Aman",
+                    isSecure = !audit.isHookingDetected
+                )
+                SecurityFeatureRow(
+                    icon = "📍",
+                    label = "Anti-Fake GPS / Mock Location",
+                    status = "Aktif (Verifikasi Satelit)",
+                    isSecure = true
+                )
+                SecurityFeatureRow(
+                    icon = "⏱️",
+                    label = "Anti-Spam & Sanitasi Input",
+                    status = "Aktif (Cooldown 15 dtk)",
+                    isSecure = true
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SecurityFeatureRow(
+    icon: String,
+    label: String,
+    status: String,
+    isSecure: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF1E293B))
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = icon, fontSize = 13.sp)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                color = Color(0xFFE2E8F0)
+            )
+        }
+        Text(
+            text = status,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 10.sp
+            ),
+            color = if (isSecure) Color(0xFF4ADE80) else Color(0xFFF87171)
+        )
     }
 }

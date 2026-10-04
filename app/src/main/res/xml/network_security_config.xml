@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Mencegah sniffing & Man-In-The-Middle (MITM) attacks -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Hanya percaya pada sertifikat SSL/TLS resmi dari sistem Android (menolak proxy liar) -->
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
